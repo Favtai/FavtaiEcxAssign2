@@ -1,48 +1,23 @@
-import fastapi
-print(fastapi.__version__)
-
-
-from typing import Union
-
 from fastapi import FastAPI
-from pydantic import BaseModel
-import pickle
-from sklearn.ensemble import RandomForestRegressor
-import pandas as pd
-import numpy as np
+import uvicorn
+from fastapi import UploadFile, File
+import re
 
 app = FastAPI()
 
-
-class Entry(BaseModel):
-    fixed_acidity: float
-    volatile_acidity: float
-    citric_acid: float
-    redisual_sugar: float
-    chlorides: float
-    free_sulfur_dioxide: float
-    total_sulfur_dioxide: float
-    density: float
-    pH: float
-    sulphates: float
-    alcohol: float
-
-@app.get("/")
+@app.get("/project")
 def read_root():
-    return {"Project": "Wine Prediction Project."}
+    return {"Project": "building Project."}
 
 
 @app.post("/prediction")
-def make_prediction(entry: Entry):
-    """Takes in a request with the features of a wine and returns the predicted quality of the wine."""
-    
-    data = pd.read_csv('./data/winequality-red.csv')
-    data.drop('quality', axis=1, inplace=True)
+async def make_prediction(file: UploadFile =  File(...)):
+    # Read the file uploaded by user
 
-    model = pickle.load(open('./model/wine_rmodel.pkl', 'rb'))
+    # Make Prediction
+    path= re.sub(r'[\]+', '/', file)
+    predictions= make_prediction(path)
+    return(predictions)
     
-    # test_df = pd.DataFrame([entry.dict().values()], columns=data.columns)
-    print(list(entry.dict().values()))
-    # print()
-    # return {"result": model.predict(test_df)}
-    return model.predict([np.array(list(entry.dict().values()))])
+if __name__ == "__main__":
+    uvicorn.run(app, port=8080, host= "0.0.0.0")
